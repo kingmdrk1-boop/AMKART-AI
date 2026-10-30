@@ -45,12 +45,17 @@ FLK-2001,Steel Bottle,AMK-SWB-02,Flipkart,2026-10-29,3,1497,600,195,90,40,0
 ```
 Amounts are INR numeric values. This is a normalized template, not an official marketplace export format. Convert marketplace reports to this format only after mapping and reconciling their columns.
 
-## Deploy to Vercel
-1. Push this project to a new GitHub repository named `amkart-seller-ai`.
-2. Import the repository in Vercel.
-3. Framework preset: Next.js; Build command: `npm run build`.
-4. Add a managed PostgreSQL database (e.g. Neon or Supabase) for the next backend phase.
-5. Do not add marketplace credentials until secure server-side OAuth/token storage is implemented.
+## Deploy to Netlify
+1. Push this project to your GitHub repository.
+2. In Netlify choose **Add new site → Import an existing project** and select this repository.
+3. Netlify reads `netlify.toml`: build command `npm run build`, publish directory `.next`, Node 20. Netlify automatically installs and configures its official Next.js runtime for supported Next.js projects.
+4. Deploy. The Next.js App Router page is rendered by Next.js; a separate static `index.html` is not required.
+5. Add database and other environment variables only after the corresponding secure backend services have been implemented.
+
+### Netlify configuration
+- `netlify.toml` configures the Next.js build command and publish directory; Netlify auto-detects the Next.js runtime.
+- `.nvmrc` and `NODE_VERSION` select Node 20.
+- Do not deploy marketplace secrets in client-side variables. Use server-side environment variables only after OAuth/token storage is implemented.
 
 ## Recommended production architecture
 - Next.js App Router + TypeScript
