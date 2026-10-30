@@ -1,0 +1,102 @@
+// Draft multi-tenant schema. Enable Prisma and migrations in the backend milestone.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id          String       @id @default(cuid())
+  name        String
+  createdAt   DateTime     @default(now())
+  memberships Membership[]
+  marketplaces MarketplaceConnection[]
+  products    Product[]
+  orders      Order[]
+  expenses    Expense[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String       @default("OWNER")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model MarketplaceConnection {
+  id             String       @id @default(cuid())
+  organizationId String
+  platform       String
+  sellerLabel    String?
+  status         String       @default("PENDING")
+  encryptedToken String?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@unique([organizationId, platform, sellerLabel])
+}
+
+model Product {
+  id             String       @id @default(cuid())
+  organizationId String
+  sku            String
+  title          String
+  hsn            String?
+  gstRate        Decimal?     @db.Decimal(5,2)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  orderItems     OrderItem[]
+  @@unique([organizationId, sku])
+}
+
+model Order {
+  id             String       @id @default(cuid())
+  organizationId String
+  marketplaceId  String?
+  externalId     String
+  platform       String
+  orderDate      DateTime
+  status         String
+  currency       String       @default("INR")
+  grossAmount    Decimal      @db.Decimal(14,2)
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items          OrderItem[]
+  @@unique([organizationId, platform, externalId])
+  @@index([organizationId, orderDate])
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  productId      String?
+  skuSnapshot    String
+  quantity       Int
+  taxableValue   Decimal  @db.Decimal(14,2)
+  taxAmount      Decimal  @db.Decimal(14,2)
+  productCost    Decimal? @db.Decimal(14,2)
+  marketplaceFee Decimal? @db.Decimal(14,2)
+  shipping       Decimal? @db.Decimal(14,2)
+  adCost         Decimal? @db.Decimal(14,2)
+  returnCost     Decimal? @db.Decimal(14,2)
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product? @relation(fields: [productId], references: [id])
+}
+
+model Expense {
+  id             String       @id @default(cuid())
+  organizationId String
+  category       String
+  description    String
+  amount         Decimal      @db.Decimal(14,2)
+  expenseDate    DateTime
+  taxAmount      Decimal?     @db.Decimal(14,2)
+  invoiceRef     String?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@index([organizationId, expenseDate])
+}
